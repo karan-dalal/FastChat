@@ -222,8 +222,8 @@ def make_supervised_data_module(
     split = int(len(perm) * 0.98)
     train_indices = perm[:split]
     eval_indices = perm[split:]
-    train_raw_data = [raw_data[i] for i in train_indices]
-    eval_raw_data = [raw_data[i] for i in eval_indices]
+    train_raw_data = [raw_data[0]]
+    eval_raw_data = [raw_data[0]]
     rank0_print(f"#train {len(train_raw_data)}, #eval {len(eval_raw_data)}")
 
     train_dataset = dataset_cls(train_raw_data, tokenizer=tokenizer)

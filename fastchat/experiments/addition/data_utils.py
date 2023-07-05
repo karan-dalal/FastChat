@@ -10,8 +10,8 @@ def new_chat(model_path):
     return get_conversation_template(model_path)
 
 def generate_addition_prompts():
-    data_paths = ['data/generate/annotations/alpaca-format/13B.json', 'data/generate/annotations/alpaca-format/13B_beam.json', 'data/generate/annotations/alpaca-format/gpt3.5.json', 'data/generate/annotations/alpaca-format/gpt4.json']
-    output_paths = ['data/addition/prompts/13B.jsonl', 'data/addition/prompts/13B_beam.jsonl', 'data/addition/prompts/gpt3.5.jsonl', 'data/addition/prompts/gpt4.jsonl']
+    data_paths = ['/home/yusun/code/karan/data/generate/annotations/alpaca-format/13B.json', '/home/yusun/code/karan/data/generate/annotations/alpaca-format/13B_beam.json', '/home/yusun/code/karan/data/generate/annotations/alpaca-format/b16.json', '/home/yusun/code/karan/data/generate/annotations/alpaca-format/gpt3.5.json', '/home/yusun/code/karan/data/generate/annotations/alpaca-format/gpt4.json']
+    output_paths = ['/home/yusun/code/karan/data/addition/prompts/13B.jsonl', '/home/yusun/code/karan/data/addition/prompts/13B_beam.jsonl', '/home/yusun/code/karan/data/addition/prompts/b16.jsonl', '/home/yusun/code/karan/data/addition/prompts/gpt3.5.jsonl', '/home/yusun/code/karan/data/addition/prompts/gpt4.jsonl']
     model_path = 'lmsys/vicuna-13b-v1.3'
     followups = [
     'Can you translate a simple sentence from English to German for me?',
@@ -91,7 +91,7 @@ def generate_addition_prompts():
                 f.write('\n')
 
 def get_common_wins():
-    annotations = ['data/generate/annotations/13B_Beam_annotations.json', 'data/generate/annotations/13B_3.5_annotations.json', 'data/generate/annotations/13B_4_annotations.json']
+    annotations = ['/home/yusun/code/karan/data/generate/annotations/13B_Beam_annotations.json', '/home/yusun/code/karan/data/generate/annotations/13B_b16_annotations.json', '/home/yusun/code/karan/data/generate/annotations/13B_3.5_annotations.json', '/home/yusun/code/karan/data/generate/annotations/13B_4_annotations.json']
     all_indexes = []
 
     for path in annotations:
@@ -105,7 +105,7 @@ def get_common_wins():
     print(list(common_elements))
 
 def main():
-    generate_addition_prompts()
+    # generate_addition_prompts()
     get_common_wins()
 
 if __name__ == "__main__":
