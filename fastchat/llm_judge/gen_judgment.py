@@ -177,7 +177,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--judge-file",
         type=str,
-        default="/scratch/data/karan/FastChat/fastchat/llm_judge/data/judge_prompts.jsonl",
+        default="data/judge_prompts.jsonl",
         help="The file of judge prompts.",
     )
     parser.add_argument("--judge-model", type=str, default="gpt-4")
@@ -209,10 +209,8 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # question_file = f"data/{args.bench_name}/question.jsonl"
-    # answer_dir = f"data/{args.bench_name}/model_answer"
-    question_file = f"/scratch/data/karan/FastChat/fastchat/llm_judge/data/{args.bench_name}/question.jsonl"
-    answer_dir = f"/scratch/data/karan/FastChat/fastchat/llm_judge/data/{args.bench_name}/model_answer"
+    question_file = f"data/{args.bench_name}/question.jsonl"
+    answer_dir = f"data/{args.bench_name}/model_answer"
     ref_answer_dir = f"data/{args.bench_name}/reference_answer"
 
     # Load questions
@@ -237,7 +235,7 @@ if __name__ == "__main__":
         judges = make_judge_single(args.judge_model, judge_prompts)
         play_a_match_func = play_a_match_single
         output_file = (
-            f"/scratch/data/karan/FastChat/fastchat/llm_judge/data/{args.bench_name}/model_judgment/{args.judge_model}_single.jsonl"
+            f"data/{args.bench_name}/model_judgment/{args.judge_model}_single.jsonl"
         )
         make_match_func = make_match_single
         baseline_model = None
