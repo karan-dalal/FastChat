@@ -5,6 +5,7 @@ import torch
 from fastchat.model.model_adapter import load_model, get_conversation_template
 
 # openai.api_key = ''
+parent_dir = '/scratch/data/karan'
 
 def load_conversations(prompts_path):
     conversations = []
@@ -16,16 +17,7 @@ def load_conversations(prompts_path):
 def new_chat(model_path):
     return get_conversation_template(model_path)
 
-def algo(conversation, model_path, num_gpus, data_path):
-    model, tokenizer = load_model(
-        model_path,
-        device="cuda",
-        num_gpus=num_gpus,
-        load_8bit=False,
-        cpu_offloading=False,
-        debug=False,
-    )
-
+def algo(model, tokenizer, conversation, model_path, data_path):
     conv = new_chat(model_path)
     responses = []
 
@@ -69,16 +61,24 @@ def algo(conversation, model_path, num_gpus, data_path):
 
 def main():
     model_path = 'lmsys/vicuna-7b-v1.3'
-    conv_path = '/nlp/scr/yusun/data/data/prompts.jsonl'
-    data_path = '/nlp/scr/yusun/data/data/base.jsonl'
+    conv_path = os.path.join(parent_dir, 'data', 'prompts.jsonl')
+    data_path = os.path.join(parent_dir, 'data', 'append.jsonl')
     num_gpus = 1
-
     if not os.path.exists(data_path):
         open(data_path, 'w').close() 
 
     conversations = load_conversations(conv_path)
+    model, tokenizer = load_model(
+        model_path,
+        device="cuda",
+        num_gpus=num_gpus,
+        load_8bit=False,
+        cpu_offloading=False,
+        debug=False,
+    )
+
     for conversation in conversations:
-        algo(conversation, model_path, num_gpus, data_path)
+        algo(model, tokenizer, conversation, model_path, data_path)
 
 if __name__ == "__main__":
     main()
