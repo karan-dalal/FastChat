@@ -259,17 +259,17 @@ if __name__ == "__main__":
 
     # Make matches
     matches = []
-    matches += make_match_func(
-        question_default, models, model_answers, judges["default"], baseline_model
-    )
-    matches += make_match_func(
-        question_math,
-        models,
-        model_answers,
-        judges["math"],
-        baseline_model,
-        ref_answers,
-    )
+    # matches += make_match_func(
+    #     question_default, models, model_answers, judges["default"], baseline_model
+    # )
+    # matches += make_match_func(
+    #     question_math,
+    #     models,
+    #     model_answers,
+    #     judges["math"],
+    #     baseline_model,
+    #     ref_answers,
+    # )
     matches += make_match_func(
         question_default,
         models,

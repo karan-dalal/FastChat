@@ -1,4 +1,5 @@
 import os
+import shutil
 import glob
 import json
 import torch
@@ -60,26 +61,29 @@ def finetune(model, tokenizer, prompt, context, data_path, curr_i):
     responses.append(response)
 
     with open(data_path, 'a') as f:
-        json.dump({'question_id': curr_i + 1, 'model_id': "vicuna-13b-v1.3", 'choices': [{"index": 0, "turns": responses}]}, f) 
+        json.dump({'question_id': curr_i, 'model_id': "vicuna-13b-v1.3", 'choices': [{"index": 0, "turns": responses}]}, f) 
         f.write('\n')
 
 def main():
+    num_epochs = 4
+    num_gpus = 1
+
     model_path = os.path.join(parent_dir, 'model')
     conv_path = os.path.join(parent_dir, 'data', 'prompts.jsonl')
     context_path = os.path.join(parent_dir, 'data', 'append.jsonl')
-    data_path = os.path.join(parent_dir, 'data', 'finetune.jsonl')
-    num_gpus = 1
+    data_paths = [os.path.join(parent_dir, 'data', 'epochs', f'epoch{i}.jsonl') for i in range(1, num_epochs + 1)]
     
-    if not os.path.exists(data_path):
-        open(data_path, 'w').close() 
+    for data_path in data_paths:
+        if not os.path.exists(data_path):
+            open(data_path, 'w').close() 
 
     prompts = load_conversations(conv_path)
     contexts = load_conversations(context_path)
     
-    for i in range(80):
+    for i in range(3, 80):
+        print(f"----- Beginning Finetuning for Prompt {i} -----")
         # Finetune model by calling subprocess
         command = [
-            "CUDA_VISIBLE_DEVICES=0,1,2,3",
             "python3",
             "-m",
             "torch.distributed.run",
@@ -90,50 +94,58 @@ def main():
             "--data_path", f"{parent_dir}/data/finetune/{i}.json",
             "--bf16", "True",
             "--output_dir", model_path,
-            "--num_train_epochs", "3",
+            "--num_train_epochs", f"{num_epochs}",
             "--per_device_train_batch_size", "1",
             "--per_device_eval_batch_size", "1",
             "--gradient_accumulation_steps", "1",
             "--evaluation_strategy", "no",
-            "--save_strategy", "steps",
-            "--save_steps", "1200",
+            "--save_strategy", "epoch",
             "--save_total_limit", "10",
             "--learning_rate", "2e-5",
             "--weight_decay", "0.",
             "--warmup_ratio", "0.03",
-            "--lr_scheduler_type", "cosine",
+            "--lr_scheduler_type", "constant",
             "--logging_steps", "1",
-            "--fsdp", "full_shard auto_wrap",
+            "--fsdp", "'full_shard auto_wrap'",
             "--fsdp_transformer_layer_cls_to_wrap", "'LlamaDecoderLayer'",
             "--tf32", "True",
             "--model_max_length", "2048",
-            "--gradient_checkpointing", "True",
+            "--gradient_checkpointing", "False",
             "--lazy_preprocess", "True"
         ]
         subprocess.run(" ".join(command), shell=True, check=True)
+        print(f"----- Completed Finetuning for Prompt {i} -----")
 
         # Wait 10 seconds
         time.sleep(10)
 
-        # Run inference on the follow up question for model
-        model, tokenizer = load_model(
-            model_path,
-            device="cuda",
-            num_gpus=num_gpus,
-            load_8bit=False,
-            cpu_offloading=False,
-            debug=False,
-        )
-        finetune(model, tokenizer, prompts[i]["turns"], contexts[i]["choices"][0]["turns"], data_path, i)
+        # Run inference on the follow up question for model (for each of the epochs)
+        for epoch in range(1, num_epochs + 1):
+            epoch_path = os.path.join(model_path, f'checkpoint-{epoch}')
+            model, tokenizer = load_model(
+                epoch_path,
+                device="cuda",
+                num_gpus=num_gpus,
+                load_8bit=False,
+                cpu_offloading=False,
+                debug=False,
+            )
+            finetune(model, tokenizer, prompts[i]["turns"], contexts[i]["choices"][0]["turns"], data_paths[epoch-1], i)
 
-        # Delete the model and clear GPUs
-        del model
-        del tokenizer
-        torch.cuda.empty_cache()
+            # Delete the model and clear GPUs
+            del model
+            del tokenizer
+            torch.cuda.empty_cache()
+            print(f"----- Completed Inference for Prompt {i}, Epoch {epoch} -----")
+        
+        # Delete all the files in the model directory
         files = glob.glob(model_path + '/*')
         for f in files:
-            os.remove(f)
-
+            if os.path.isdir(f):
+                shutil.rmtree(f)
+            else:
+                os.remove(f)
+                
         # Wait 10 seconds
         time.sleep(10)
 

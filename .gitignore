@@ -28,3 +28,8 @@ tests/state_of_the_union.txt
 
 # Build
 build
+
+# Added
+fastchat/llm_judge/data
+logs
+graph.py
